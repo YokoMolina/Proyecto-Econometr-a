@@ -23,13 +23,19 @@ data_new <- data |>
 
 ######___________________
 
-# construyamos el modelo
+# construyamos el modelo con las categorias 
 
-modelo <- lm(Global ~ Rank+Platform+Genre+Review, data = data_new)
+data_new_1 <- data |>
+  filter(Platform %in% tipos_consola & Genre %in% tipos_genero)
+
+# modelo
+
+modelo <- lm(Global ~ Rank+Platform+Genre+Review, data = data_new_1)
 
 
 # R pone la categoria base, genero=Action, plataforma= PS2
 summary(modelo)
+
 # del summary obtenemos que ya que el valor Pr(>|t|) es menor a 0.05
 # concluimos que las siguientes variables son significativas 
 
@@ -46,8 +52,7 @@ intervalos_confianza <- confint(modelo)
 print(intervalos_confianza)
 
 
-#______________________________________________
-#diferencias significativas entre los betas (Prueba F)
+
 
 
 #_______________________________________________-
@@ -68,7 +73,7 @@ data_categ_1 <- data_new |>
 
 View(data_categ_1)
 
-
+#______________________________________--
 
 #  Probemos: si es conjuntamente significativo b_1 y b_2
 
@@ -99,8 +104,8 @@ v_p <- pchisq(ML, 2, lower.tail = FALSE) #false por la colita de la derecha
 
 v_p
 
-# vemos que v_p> 0.05 por lo que se rechaza la prueba
-# es decir la categoria MISC Y SHOOTER son significativos conjuntamente 
+# vemos que v_p> 0.05 por lo que se acepta la prueba
+# es decir la categoria MISC Y SHOOTER no sson significativos conjuntamente 
 
 #______________________________
 
@@ -133,43 +138,152 @@ v_p <- pchisq(ML, 2, lower.tail = FALSE) #false por la colita de la derecha
 
 v_p
 
-# vemos que v_p> 0.05 por lo que se rechaza la prueba
-# es decir la categoria Sports y la variable Review son significativos conjuntamente 
+# vemos que v_p> 0.05 por lo que se acepta la prueba
+# es decir la categoria Sports y la variable Review no son significativos conjuntamente 
 
 #______________________________
 
-#  Probemos: si es conjuntamente significativo b_3 y b_4
+# PRUEBA DE 3 VARIABLES
+#  Probemos: si es conjuntamente significativo b_1,b_2 y b_3
 
 
 # modelo restringido 
-modelo_res_1 <- lm(Global ~ Rank+Platform+Misc+Shooter, data = data_categ_1)
+modelo_res_2 <- lm(Global ~ Rank+Platform+Review, data = data_categ_1)
 
-summary(modelo_res_1)
+summary(modelo_res_2)
 #obtengamos los residuos
-residuos_res_1 <- modelo_res_1$residuals
+residuos_res_2 <- modelo_res_2$residuals
 
 # hagamos el modelo auxiliar
 
-modelo_aux_1 <-lm(residuos_res_1 ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+modelo_aux_2 <-lm(residuos_res_2 ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
 
 # Obtengamos el valor ML del modelo auxiliar
 
-ML <- summary(modelo_aux_1)$r.square*601
+ML <- summary(modelo_aux_2)$r.square*601
 ML
 
 # chi
 
-chi_2 <- qchisq(0.95,2)
+chi_2 <- qchisq(0.95,3)
 
 # valor p, es la proba desde el ML para abajo
 
-v_p <- pchisq(ML, 2, lower.tail = FALSE) #false por la colita de la derecha
+v_p <- pchisq(ML, 3, lower.tail = FALSE) #false por la colita de la derecha
 
 v_p
 
-# vemos que v_p> 0.05 por lo que se rechaza la prueba
-# es decir la categoria Sports y la variable Review son significativos conjuntamente 
+# vemos que v_p> 0.05 por lo que se acepta la prueba
+# es decir la categoria Sports, MICS, SHooter no son conjuntamente significativos
 
 
+#__________________________________________
+#  Probemos: si es conjuntamente significativo b_1,b_2 y b_4
+
+
+# modelo restringido 
+modelo_res_3 <- lm(Global ~ Rank+Platform+Sports, data = data_categ_1)
+
+
+summary(modelo_res_3)
+#obtengamos los residuos
+residuos_res_3 <- modelo_res_3$residuals
+
+# hagamos el modelo auxiliar
+
+modelo_aux_3 <-lm(residuos_res_3 ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+
+# Obtengamos el valor ML del modelo auxiliar
+
+ML <- summary(modelo_aux_3)$r.square*601
+ML
+
+# chi
+
+chi_2 <- qchisq(0.95,3)
+
+# valor p, es la proba desde el ML para abajo
+
+v_p <- pchisq(ML, 3, lower.tail = FALSE) #false por la colita de la derecha
+
+v_p
+
+# vemos que v_p> 0.05 por lo que se acepta la prueba
+# es decir la categoria MICS, SHooter y la variable review no son conjuntamente significativos
+
+#_________________________________________________
+#______________________________________________
+
+#diferencias significativas entre los betas (Prueba F)
+
+#PRUEBA DE 2 VARIABLES 
+
+# Probemos: si es conjuntamente significativo b_2 y b_3
+
+#modelo completo
+
+mode <-lm(Global ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+
+# modelo restringido
+
+mode_res <- lm(Global ~ Rank+Platform+Review+Misc, data = data_categ_1)
+
+# ENCONTREMOS EN F
+
+F <- ((summary(mode)$r.square-summary(mode_res)$r.square)/(1-summary(mode)$r.square)*(601-9)/2)
+
+F
+
+F_c <- qf(0.95,2,592)
+F_c
+
+
+# VEMOS QUE F<fc POR LO QUE SE ACEPTA HO ES DECIR NO SON CONJUNTAENTE SIGNIFICATIVAS
+
+#______________________________
+
+# Probemos: si es conjuntamente significativo b_1 y b_4
+
+
+# modelo restringido
+
+mode_res_1 <- lm(Global ~ Rank+Platform+Sports+Shooter, data = data_categ_1)
+
+# ENCONTREMOS EN F
+
+F <- ((summary(mode_1)$r.square-summary(mode_res_1)$r.square)/(1-summary(mode_1)$r.square)*(601-9)/2)
+
+F
+
+F_c <- qf(0.95,2,592)
+F_c
+
+
+# VEMOS QUE F<fc POR LO QUE SE ACEPTA HO ES DECIR NO SON CONJUNTAENTE SIGNIFICATIVAS
+#la categoria MICS y la variable REview
+
+
+#______________________________________
+# CON TRES VARIABLES 
+
+# Probemos: si es conjuntamente significativo b_1, b_3 Y b_4
+
+
+# modelo restringido
+
+mode_res_2 <- lm(Global ~ Rank+Platform+Shooter, data = data_categ_1)
+
+# ENCONTREMOS EN F
+
+F <- ((summary(mode)$r.square-summary(mode_res_2)$r.square)/(1-summary(mode)$r.square)*(601-9)/3)
+
+F
+
+F_c <- qf(0.95,3,592)
+F_c
+
+
+# VEMOS QUE F<fc POR LO QUE SE ACEPTA HO ES DECIR NO SON CONJUNTAENTE SIGNIFICATIVAS
+#la categoria Mics, Sports y la variable REview
 
 
