@@ -63,13 +63,18 @@ print(intervalos_confianza)
 
 # Consideramos el modelo inicial abriendo las categorias del genero del juego:
 # categoria base: Action
-# global = b_0+b_1*GenreMISC+b_2*GenreSHOOTER+b_3*GenreSPORTS+b_4*Review+B_5*Platform+b_6*Rank
+# global = b_0+b_1*GenreMISC+b_2*GenreSHOOTER+b_3*GenreSPORTS+b_4*Review+b_5*Rank+
+# b_6*PS2+b_7*X360+b_8*Wii
 
 # construyamos el modelo, creando los grupos de la variable categorica Género del juego
-data_categ_1 <- data_new |>
+#además creemos grupos para la variable categórica Plataforma
+data_categ_1 <- data_new_1 |>
   mutate(Misc = ifelse(Genre == "Misc",1,0),
          Shooter = ifelse(Genre == "Shooter",1,0),
-         Sports = ifelse(Genre == "Sports",1,0))
+         Sports = ifelse(Genre == "Sports",1,0)) |>
+  mutate(PS3 = ifelse(Platform == "PS3",1,0),
+         X360 = ifelse(Platform == "X360",1,0),
+         Wii = ifelse(Platform == "Wii",1,0))
 
 View(data_categ_1)
 
@@ -79,7 +84,7 @@ View(data_categ_1)
 
 
 # modelo restringido 
-modelo_res <- lm(Global ~ Rank+Platform+Review+Sports, data = data_categ_1)
+modelo_res <- lm(Global ~ Rank+Review+Sports+PS3+X360+Wii, data = data_categ_1)
 
 summary(modelo_res)
 #obtengamos los residuos
@@ -87,7 +92,7 @@ residuos_res <- modelo_res$residuals
 
 # hagamos el modelo auxiliar
 
-modelo_aux <-lm(residuos_res ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+modelo_aux <-lm(residuos_res ~ Rank+Review+Sports+Misc+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # Obtengamos el valor ML del modelo auxiliar
 
@@ -113,7 +118,7 @@ v_p
 
 
 # modelo restringido 
-modelo_res_1 <- lm(Global ~ Rank+Platform+Misc+Shooter, data = data_categ_1)
+modelo_res_1 <- lm(Global ~ Rank+Misc+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 summary(modelo_res_1)
 #obtengamos los residuos
@@ -121,7 +126,7 @@ residuos_res_1 <- modelo_res_1$residuals
 
 # hagamos el modelo auxiliar
 
-modelo_aux_1 <-lm(residuos_res_1 ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+modelo_aux_1 <-lm(residuos_res_1 ~ Rank+Review+Sports+Misc+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # Obtengamos el valor ML del modelo auxiliar
 
@@ -148,7 +153,7 @@ v_p
 
 
 # modelo restringido 
-modelo_res_2 <- lm(Global ~ Rank+Platform+Review, data = data_categ_1)
+modelo_res_2 <- lm(Global ~ Rank+Review+PS3+X360+Wii, data = data_categ_1)
 
 summary(modelo_res_2)
 #obtengamos los residuos
@@ -156,7 +161,7 @@ residuos_res_2 <- modelo_res_2$residuals
 
 # hagamos el modelo auxiliar
 
-modelo_aux_2 <-lm(residuos_res_2 ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+modelo_aux_2 <-lm(residuos_res_2 ~ Rank+Review+Sports+Misc+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # Obtengamos el valor ML del modelo auxiliar
 
@@ -182,7 +187,7 @@ v_p
 
 
 # modelo restringido 
-modelo_res_3 <- lm(Global ~ Rank+Platform+Sports, data = data_categ_1)
+modelo_res_3 <- lm(Global ~ Rank+Sports+PS3+X360+Wii, data = data_categ_1)
 
 
 summary(modelo_res_3)
@@ -191,7 +196,7 @@ residuos_res_3 <- modelo_res_3$residuals
 
 # hagamos el modelo auxiliar
 
-modelo_aux_3 <-lm(residuos_res_3 ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+modelo_aux_3 <-lm(residuos_res_3 ~ Rank+Review+Sports+Misc+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # Obtengamos el valor ML del modelo auxiliar
 
@@ -222,11 +227,11 @@ v_p
 
 #modelo completo
 
-mode <-lm(Global ~ Rank+Platform+Review+Sports+Misc+Shooter, data = data_categ_1)
+mode <-lm(Global ~ Rank+Review+Sports+Misc+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # modelo restringido
 
-mode_res <- lm(Global ~ Rank+Platform+Review+Misc, data = data_categ_1)
+mode_res <- lm(Global ~ Rank+Review+Misc+PS3+X360+Wii, data = data_categ_1)
 
 # ENCONTREMOS EN F
 
@@ -247,7 +252,7 @@ F_c
 
 # modelo restringido
 
-mode_res_1 <- lm(Global ~ Rank+Platform+Sports+Shooter, data = data_categ_1)
+mode_res_1 <- lm(Global ~ Rank+Sports+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # ENCONTREMOS EN F
 
@@ -262,6 +267,35 @@ F_c
 # VEMOS QUE F<fc POR LO QUE SE ACEPTA HO ES DECIR NO SON CONJUNTAENTE SIGNIFICATIVAS
 #la categoria MICS y la variable REview
 
+#______________________________________
+
+# global = b_0+b_1*GenreMISC+b_2*GenreSHOOTER+b_3*GenreSPORTS+b_4*Review+b_5*Rank+
+# b_6*PS3+b_7*X360+b_8*Wii
+
+
+# Probemos: si es conjuntamente significativo b_5 y b_8
+
+
+# modelo restringido
+
+mode_res_3 <- lm(Global ~ Review+Sports+Misc+Shooter+PS3+X360, data = data_categ_1)
+
+# ENCONTREMOS EN F
+
+F <- ((summary(mode)$r.square-summary(mode_res_3)$r.square)/(1-summary(mode)$r.square)*(601-9)/2)
+
+F
+
+F_c <- qf(0.95,2,592)
+F_c
+
+
+# VEMOS QUE F>fc POR LO QUE SE Rechaza HO ES DECIR SON CONJUNTAENTE SIGNIFICATIVAS
+#la categoria Wii y la variable Rank
+
+
+
+
 
 #______________________________________
 # CON TRES VARIABLES 
@@ -271,7 +305,7 @@ F_c
 
 # modelo restringido
 
-mode_res_2 <- lm(Global ~ Rank+Platform+Shooter, data = data_categ_1)
+mode_res_2 <- lm(Global ~ Rank+Shooter+PS3+X360+Wii, data = data_categ_1)
 
 # ENCONTREMOS EN F
 
@@ -285,5 +319,31 @@ F_c
 
 # VEMOS QUE F<fc POR LO QUE SE ACEPTA HO ES DECIR NO SON CONJUNTAENTE SIGNIFICATIVAS
 #la categoria Mics, Sports y la variable REview
+
+#______________________________________
+# CON TRES VARIABLES 
+
+# Probemos: si es conjuntamente significativo b_1, b_5 Y b_8
+
+
+# modelo restringido
+
+mode_res_4 <- lm(Global ~ Review+Sports+Shooter+PS3+X360, data = data_categ_1)
+
+# ENCONTREMOS EN F
+
+F <- ((summary(mode)$r.square-summary(mode_res_4)$r.square)/(1-summary(mode)$r.square)*(601-9)/3)
+
+F
+
+F_c <- qf(0.95,3,592)
+F_c
+
+
+# VEMOS QUE F>fc POR LO QUE SE Rechaza HO ES DECIR SON CONJUNTAENTE SIGNIFICATIVAS
+#la categoria Wii, Mics y la variable Rank
+
+
+
 
 
