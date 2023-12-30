@@ -5,21 +5,14 @@ library(dplyr)
 
 data <- read.csv("Video Games Sales.csv",sep = ",")
 
-View(data)
+#View(data)
 # nrow(data) #numero de datos 
 
-#filtremos los datos NA y eligamos 4 tipos de consolas y generos
+# eligamos 4 tipos de consolas y generos
 tipos_consola <- c("PS3", "PS2", "X360","Wii")
 
 tipos_genero <- c("Shooter", "Sports", "Action","Misc")
 
-#construyamos la data
-
-data_new <- data |>
-  filter(Platform %in% tipos_consola & Genre %in% tipos_genero)
- 
-
-#View(data_new)
 
 ######___________________
 
@@ -39,14 +32,14 @@ summary(modelo)
 # del summary obtenemos que ya que el valor Pr(>|t|) es menor a 0.05
 # concluimos que las siguientes variables son significativas 
 
-# intersepto (PS2, ACTION)??
+# intersepto 
 # Rank
 # PlatformWii
 # 
 
 #_____________________________________
 
-# intervalos de confianza para los betas TODOS
+# intervalos de confianza para los betas
 
 intervalos_confianza <- confint(modelo)
 print(intervalos_confianza)
@@ -62,9 +55,9 @@ print(intervalos_confianza)
 
 
 # Consideramos el modelo inicial abriendo las categorias del genero del juego:
-# categoria base: Action
+# categoria base: Action y PS2
 # global = b_0+b_1*GenreMISC+b_2*GenreSHOOTER+b_3*GenreSPORTS+b_4*Review+b_5*Rank+
-# b_6*PS2+b_7*X360+b_8*Wii
+# b_6*PS3+b_7*X360+b_8*Wii
 
 # construyamos el modelo, creando los grupos de la variable categorica Género del juego
 #además creemos grupos para la variable categórica Plataforma
@@ -76,7 +69,7 @@ data_categ_1 <- data_new_1 |>
          X360 = ifelse(Platform == "X360",1,0),
          Wii = ifelse(Platform == "Wii",1,0))
 
-View(data_categ_1)
+#View(data_categ_1)
 
 #______________________________________--
 
