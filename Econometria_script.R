@@ -338,5 +338,283 @@ F_c
 
 
 
+### Primer modelo:
+
+library(readxl)
+library(dplyr)
+
+#data <- read.csv("Video Games Sales.csv",sep = ",")
+data<-read.csv("C:\\Users\\DEBBIE\\Desktop\\Econometría\\Proyecto-Econometr-a\\Video Games Sales.csv")
+
+#View(data)
+# nrow(data) #numero de datos 
+
+#filtremos los datos NA y eligamos 4 tipos de consolas y generos
+tipos_consola <- c("PS3", "PS2", "X360","Wii")
+
+tipos_genero <- c("Shooter", "Sports", "Action","Misc")
+
+#construyamos la data
+library(dplyr)
+
+data_new <- data %>% filter(Platform %in% tipos_consola & Genre %in% tipos_genero) %>% mutate(Genre=case_when(Genre=="Shooter"~0,
+                                                                                                              Genre=="Sports"~1,
+                                                                                                              Genre=="Action"~2,
+                                                                                                              Genre=="Misc"~3)) %>% mutate(Platform=case_when(Platform=="PS3"~0,
+                                                                                                                                                              Platform=="PS2"~1,
+                                                                                                                                                              Platform=="X360"~2,
+                                                                                                                                                              Platform=="Wii"~3)) %>% select(Global,North.America,Japan,Review,Rank)
+View(data_new)
+
+
+##Modelo:
+mod<-lm(Global~North.America+Japan+Review+Rank,data_new)
+summary(mod)
+
+
+## SST:
+SST<-sum((data_new$Global-mean(data_new$Global))^2)
+SST
+## SSE:
+
+SSE<-sum(mod$residuals^2)
+SSE
+##SSR:
+SSR<-sum((mod$fitted.values-mean(data_new$Global))^2)
+SSR
+#### R^2
+
+R2<-1-SSE/SST
+R2
+
+#### R^2 ajustado:
+R_ajustado<-1-(((601-1)/(601-5))*(1-R2))
+R_ajustado
+
+# Matriz X:
+
+unos<-rep(1,601)
+NorA<-data_new$North.America
+Japon<-data_new$Japan
+Review<-data_new$Review
+Rank<-data_new$Rank
+y<-data_new$Global
+
+X<-cbind(unos,NorA,Japon,Review,Rank)
+
+# Matriz Beta estimados:
+
+Beta_e<-solve(t(X)%*%X)%*%(t(X)%*%y)
+Beta_e
+
+# Residuos:
+u_e<-y-(X%*%Beta_e)
+u_e
+## Matriz de varianza de los Beta:
+sigma2<-t(u_e)%*%u_e/(601-5)
+sigma2<-as.vector(sigma2)
+Var_beta<-solve(t(X)%*%X)*sigma2
+Var_beta
+
+
+
+## Pruebas de hipótesis: Beta significativos:
+# Nivel de confianza del 95%:
+
+tc<-qt(0.95,601-5,lower.tail = TRUE)
+tc
+
+# B2 (North.America):
+t_g<-mod$coefficients[2]/1.947e-02
+t_g
+# B3 (Japan)
+t_p<-mod$coefficients[3]/1.102e-01
+t_p
+# B4 (Review):
+t_r<-mod$coefficients[4]/3.451e-03 
+t_r
+# B5 (Rank):
+t_rk<-mod$coefficients[5]/7.103e-05
+t_rk
+
+## Pruebas de hipótesis sobre combinaciones lineales de parámetros:
+
+
+## Ho:B2-B3=0 (NorthAmerica-Japan)
+tgp<-(mod$coefficients[2]-mod$coefficients[3])/(sqrt(Var_beta[2,2]+Var_beta[3,3]-2*Var_beta[2,3]))
+tgp
+
+
+## Ho: B4-B5=0 (Review-Rank)
+trr<-(mod$coefficients[4]-mod$coefficients[5])/(sqrt(Var_beta[4,4]+Var_beta[5,5]-2*Var_beta[4,5]))
+trr
+
+## Ho:B2-B4=0 (NorthAmerica-Review)
+tgr<-(mod$coefficients[2]-mod$coefficients[4])/(sqrt(Var_beta[2,2]+Var_beta[4,4]-2*Var_beta[2,4]))
+tgr
+
+## Ho:B3-B5=0 (Japan-Rank)
+tpr<-(mod$coefficients[3]-mod$coefficients[5])/(sqrt(Var_beta[3,3]+Var_beta[5,5]-2*Var_beta[3,5]))
+tpr
+
+
+
+#### Pruebas de hipótesis conjuntamente significativas:
+
+### Ho: B2=0, B3=0
+
+## Estadístico F:
+# Con SSE:
+Fc<-qf(0.95,2,601-5)
+Fc
+
+# Modelo restringido:
+mod1<-lm(Global~Review+Rank,data_new)
+SSEr<-sum(mod1$residuals^2)
+Fe_1<-((SSEr-SSE)/2)/(SSE/(601-5))
+Fe_1
+# Con R^2
+Fe_2<-((summary(mod)$r.squared-summary(mod1)$r.squared)/(1-summary(mod)$r.squared))*(601-5)/2
+Fe_2
+
+## ML:
+
+modr1<-lm(mod1$residuals~North.America+Japan+Review+Rank,data_new)
+ML1<-601*summary(modr1)$r.squared
+ML1
+MLc<-qchisq(0.95,2)
+MLc
+
+### Ho: B2=0, B4=0
+
+## Estadístico F:
+Fc1<-qf(0.95,2,601-5)
+Fc1
+# Con SSE:
+
+# Modelo restringido:
+mod2<-lm(Global~Japan+Rank,data_new)
+SSEr2<-sum(mod2$residuals^2)
+# Estadístico F con SSE:
+Fe_12<-((SSEr2-SSE)/2)/(SSE/(601-5))
+Fe_12
+# Con R^2
+Fe_22<-((summary(mod)$r.squared-summary(mod2)$r.squared)/(1-summary(mod)$r.squared))*(601-5)/2
+Fe_22
+
+# ML:
+modr2<-lm(mod2$residuals~North.America+Japan+Review+Rank,data_new)
+ML2<-601*summary(modr2)$r.squared
+ML2
+
+## Ho: B2=0, B3=0,B5=0
+
+Fc2<-qf(0.95,3,601-5)
+Fc2
+# Con SSE:
+
+# Modelo restringido:
+mod3<-lm(Global~Review,data_new)
+SSEr3<-sum(mod3$residuals^2)
+Fe_123<-((SSEr3-SSE)/3)/(SSE/(601-5))
+Fe_123
+# Con R^2
+Fe_223<-((summary(mod)$r.squared-summary(mod3)$r.squared)/(1-summary(mod)$r.squared))*(601-5)/3
+Fe_223
+
+# ML:
+
+modr3<-lm(mod3$residuals~North.America+Japan+Review+Rank,data_new)
+ML3<-601*summary(modr3)$r.squared
+ML3
+
+# ML calculado:
+MLc2<-qchisq(0.95,3)
+MLc2
+
+### Intervalos de Confianza:
+
+## Para los estimadores Beta:
+# B1:
+If1<-mod$coefficients[1]-tc*sqrt(Var_beta[1,1])
+If1
+# Intervalo superior:
+Is1<-mod$coefficients[1]+tc*sqrt(Var_beta[1,1])
+Is1
+
+# B2(NorthAmerica):
+# Intervalo inferior:
+If2<-mod$coefficients[2]-tc*sqrt(Var_beta[2,2])
+If2
+# Intervalo superior:
+Is2<-mod$coefficients[2]+tc*sqrt(Var_beta[2,2])
+Is2
+
+# B3(Japan):
+# Intervalo inferior:
+If3<-mod$coefficients[3]-tc*sqrt(Var_beta[3,3])
+If3
+# Intervalo superior:
+Is3<-mod$coefficients[3]+tc*sqrt(Var_beta[3,3])
+Is3
+
+
+# B4 (Review):
+# Intervalo inferior:
+If4<-mod$coefficients[4]-tc*sqrt(Var_beta[4,4])
+If4
+# Intervalo superior:
+Is4<-mod$coefficients[4]+tc*sqrt(Var_beta[4,4])
+Is4
+
+# B5 (Rank):
+# Intervalo inferior:
+If5<-mod$coefficients[5]-tc*sqrt(Var_beta[5,5])
+If5
+# Intervalo superior:
+Is5<-mod$coefficients[5]+tc*sqrt(Var_beta[5,5])
+Is5
+
+# Para valores específicos:
+vc<-c(1,15,22,91,54)
+vcm<-matrix(vc,ncol=1)
+theta_e<-t(vcm)%*%Beta_e
+theta_e
+# Varianza:
+Var_theta<-t(vc)%*%Var_beta%*%vc
+Var_theta
+#Intervalo inferior:
+
+ift<-theta_e-tc*sqrt(Var_theta)
+ift
+# Intervalo superior:
+ist<-theta_e+tc*sqrt(Var_theta)
+ist
+
+# Intervalo para una observación en particular:
+xo<-c(1,31,10,27,25)
+xom<-matrix(xo,ncol=1)
+yo_e<-t(xom)%*%Beta_e
+## Varianza eo_e
+V_eo<-sigma2*(1+t(xom)%*%solve(t(X)%*%X)%*%xom)
+V_eo
+# Intervalo inferior para yo:
+ifyo<-yo_e-tc*sqrt(V_eo)
+ifyo
+# Intervalo superior para yo:
+isyo<-yo_e+tc*sqrt(V_eo)
+isyo
+
+
+
+
+
+
+
+
+
+
+
+
 
 
