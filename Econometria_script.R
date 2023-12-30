@@ -41,7 +41,7 @@ summary(modelo)
 
 # intervalos de confianza para los betas
 
-intervalos_confianza <- confint(modelo)
+intervalos_confianza <- confint(modelo, level = 0.95)
 print(intervalos_confianza)
 
 
